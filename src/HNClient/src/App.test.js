@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import renderer from 'react-test-renderer';
+import {shallow} from 'enzyme';
 import App, {Table, Search, Button} from './App';
 
 describe('App', () => {
@@ -54,10 +55,18 @@ describe('Table', () => {
             { title: '1', author: '1', num_comments: 1, points: 2, objectID: 'y' },
             { title: '2', author: '2', num_comments: 1, points: 2, objectID: 'z' }
         ],
+        isSortReverse: false,
+        sortKey: 'NONE'q
     };
     it('renders', () => {
         const div = document.createElement('div');
         ReactDOM.render(<Table { ...props } />, div);
+    });
+    it('shows two items in list', () => {
+        const elem = shallow(
+            <Table {...props} />
+        );
+        expect(elem.find('.table-row').length).toBe(2);
     });
     test('snapshots', () => {
         const comp = renderer.create(
