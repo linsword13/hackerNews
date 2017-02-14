@@ -56,7 +56,7 @@ describe('Table', () => {
             { title: '2', author: '2', num_comments: 1, points: 2, objectID: 'z' }
         ],
         isSortReverse: false,
-        sortKey: 'NONE'q
+        sortKey: 'NONE'
     };
     it('renders', () => {
         const div = document.createElement('div');

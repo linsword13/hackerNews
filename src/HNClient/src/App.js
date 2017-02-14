@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {sortBy} from 'lodash';
 import './App.css';
 
-const DEFAULT_QUERY = 'redux';
+const DEFAULT_QUERY = 'mathematica';
 const DEFAULT_PAGE = 0;
 const DEFAULT_HPP = '100';
 
