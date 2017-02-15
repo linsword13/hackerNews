@@ -1,16 +1,9 @@
 import React, { Component } from 'react';
 import {sortBy} from 'lodash';
+import {store, actions} from './Store.js';
 import './App.css';
 
-const DEFAULT_QUERY = 'mathematica';
 const DEFAULT_PAGE = 0;
-const DEFAULT_HPP = '100';
-
-const PATH_BASE = 'https://hn.algolia.com/api/v1';
-const PATH_SEARCH = '/search';
-const PARAM_SEARCH = 'query=';
-const PARAM_PAGE = 'page=';
-const PARAM_HPP = 'hitsPerPage=';
 
 const SORTS = {
     NONE: list => list,
@@ -21,27 +14,15 @@ const SORTS = {
 }
 
 class App extends Component {
-    constructor() {
-        super();
-
-        this.state = {
-            results: null,
-            searchKey: '',
-            searchTerm: DEFAULT_QUERY,
-            isLoading: false,
-            sortKey: 'NONE',
-            isSortReverse: false
-        };
-    }
-
     componentDidMount() {
-        const {searchTerm} = this.state;
-        this.setState({searchKey: searchTerm});
+        store.subscribe(() => this.forceUpdate());
+        const {searchTerm} = store.getState();
+        store.dispatch(actions.updateSearchKey(searchTerm));
         this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
     }
 
     render() {
-        const {searchTerm, results, searchKey, isLoading, sortKey, isSortReverse} = this.state;
+        const {results, searchKey, searchTerm, isLoading, sortKey, isSortReverse} = store.getState();
         const page = (
             results && 
             results[searchKey] &&
@@ -84,49 +65,20 @@ class App extends Component {
     }
 
     onDismiss = (id) => {
-        const {searchKey, results} = this.state;
-        const {hits, page} = results[searchKey];
-        const updatedHits = hits.filter(item => item.objectID !== id);
-        this.setState({
-            results: {
-                ...results, 
-                [searchKey]: {hits: updatedHits, page}
-            }
-        });
+        store.dispatch(actions.setOnDismiss(id));
     };
 
     onSearchChange = ev => {
-        this.setState({searchTerm: ev.target.value});
-    };
-
-    setSearchTopstories = (result) => {
-        const {hits, page} = result;
-        const {searchKey, results} = this.state
-        const oldHits = results && results[searchKey] 
-            ? results[searchKey].hits 
-            : [];
-        const updatedHits = [...oldHits, ...hits];
-        this.setState({
-            results: {
-                ...results, 
-                [searchKey]: {hits: updatedHits, page}
-            },
-            isLoading: false
-        });
+        store.dispatch(actions.updateSearchTerm(ev.target.value));
     };
 
     fetchSearchTopstories = (searchTerm, page) => {
-        this.setState({isLoading: true});
-        const uri = encodeURI(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}\
-            &${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`);
-        fetch(uri)
-            .then(resp => resp.json())
-            .then(res => this.setSearchTopstories(res));
+        store.dispatch(actions.fetchEntries(searchTerm, page));
     };
 
     onSearchSubmit = (ev) => {
-        const {searchTerm} = this.state;
-        this.setState({searchKey: searchTerm});
+        const {searchTerm} = store.getState();
+        store.dispatch(actions.updateSearchKey(searchTerm));
         ev.preventDefault();
         if (this.needsToSearchTopstories(searchTerm)) {
             this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
@@ -134,12 +86,13 @@ class App extends Component {
     };
 
     needsToSearchTopstories = (searchTerm) => {
-        return !this.state.results[searchTerm];
+        return !store.getState().results[searchTerm];
     };
 
     onSort = (sortKey) => {
-        const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
-        this.setState({sortKey, isSortReverse});
+        const isSortReverse = store.getState().sortKey === sortKey && !store.getState().isSortReverse;
+        store.dispatch(actions.updateSortKey(sortKey));
+        store.dispatch(actions.updateIsSortReverse(isSortReverse));
     };
 }
 
